@@ -9,12 +9,55 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 
 library (tidyverse)
-library (googlesheets)
+library (googlesheets4)
+library (gsubfn)
 ```
 
 ```{r read in data from googlesheets}
 
+d <- read_sheet ("https://docs.google.com/spreadsheets/d/17HwxHWg9-0rkrFJ3q0WTy9ttgN9ioKriF96CFOMVK60/edit#gid=2038454978")
+
+#want to keep only the characters inside the brackets for names of cols 3-22, unsure how to right code to do this
+
+d$person <- d$`If you would like to be able to see your ratings over time or on a graph with other peoples' ratings, please enter a few numbers or letters that you will remember.  If you want to remain anonymous, don't use things like your name or initials!`
+
+d$text <- d$`Please write a few sentences about what you are doing, things that might be influencing how you feel, or whatever you want!`
+
+d$Interested <- d$`Rate how much you feel each way RIGHT NOW. [Interested]`
+d$Distressed <- d$`Rate how much you feel each way RIGHT NOW. [Distressed]`
+d$Excited <- d$`Rate how much you feel each way RIGHT NOW. [Excited]`
+d$Upset<- d$`Rate how much you feel each way RIGHT NOW. [Upset]`
+d$Strong <- d$`Rate how much you feel each way RIGHT NOW. [Strong]`
 
 
+
+```
+
+```{r}
+
+sm <- d %>%
+  select (Timestamp, person, Interested:Strong, text)
+
+
+long <- sm %>%
+  pivot_longer (Interested:Strong,
+                names_to = "experience",
+                values_to = "intensity")
+
+long$experience <- as.factor(long$experience)
+
+long$intensity_num <- as.factor(long$intensity)
+
+long$intensity_num <- recode(long$intensity_num,
+                             "Very slightly or not at all" = 0,
+                              "A little" = 1,
+                             "Moderately" = 2,
+                             "Quite a bit" = 3,
+                             "Extremely" = 4)
+```
+
+```{r}
+ggplot (long, aes (x=Timestamp, y = intensity_num, color = experience )) + 
+  geom_point ()
 ```
 
